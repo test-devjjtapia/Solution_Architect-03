@@ -1,0 +1,62 @@
+@startuml
+!theme spacelab
+
+left to right direction
+
+skinparam rectangle {
+  BorderColor #5DADE2
+  BackgroundColor #AED6F1
+}
+
+skinparam database {
+  BorderColor #48C9B0
+  BackgroundColor #A3E4D7
+}
+
+skinparam queue {
+  BorderColor #F4D03F
+  BackgroundColor #F9E79F
+}
+
+skinparam component {
+    BorderColor #E59866
+    BackgroundColor #F5CBA7
+}
+
+actor "SaaS App" as SaaS
+
+package "Arquitectura Magenta (Cloud)" {
+  component "API Gateway" as Gateway
+  queue "Apache Kafka" as Kafka
+}
+
+package "Hub de Integración (Cloud)" {
+  component "Integration Hub\n(Spring Boot)" as Hub
+  database "Cache\n(Redis)" as Cache
+}
+
+package "Core Legacy (On-Premise)" {
+  component "z/OS Connect EE" as ZConnect
+  database "Mainframe IBM z/OS" as Mainframe {
+    component "CICS" as CICS
+    database "Db2" as DB2
+  }
+}
+
+' Flujo Síncrono (Consulta)
+SaaS --> Gateway : 1. GET /api/poliza/{id} (JWT)
+Gateway -> Hub : 2. forward
+Hub -> ZConnect : 3. GET /mainframe/poliza/{id} (mTLS)
+ZConnect -> CICS : 4. EXEC CICS LINK
+CICS -> DB2 : 5. SQL Query
+
+Hub -- Cache : consulta/almacena
+
+' Flujo Asíncrono (Notificación)
+SaaS -> Kafka : 1. Publica evento (cliente.creado)
+Hub -> Kafka : 2. Consume evento
+Hub -> ZConnect : 3. POST /mainframe/cliente (mTLS)
+ZConnect -> CICS : 4. EXEC CICS LINK
+CICS -> DB2 : 5. INSERT
+
+@enduml

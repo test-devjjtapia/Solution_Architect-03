@@ -1,0 +1,28 @@
+# Fichero de configuración de Spring Cloud Gateway (application.yml)
+
+server:
+  port: 8080
+
+spring:
+  cloud:
+    gateway:
+      routes:
+        # Ruta para las operaciones de pólizas
+        # Todas las peticiones a /api/polizas/** se redirigen al Integration Hub
+        - id: integration_hub_polizas_route
+          uri: http://integration-hub-service:8080 # El nombre del servicio en Kubernetes/OpenShift
+          predicates:
+            - Path=/api/polizas/**
+          filters:
+            # Aquí se podrían añadir filtros para seguridad, reintentos, etc.
+            # Por ejemplo, validar un JWT, transformar cabeceras, etc.
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 100
+                redis-rate-limiter.burstCapacity: 200
+
+# Configuración del Rate Limiter (requiere Redis)
+spring:
+  redis:
+    host: redis-service
+    port: 6379
