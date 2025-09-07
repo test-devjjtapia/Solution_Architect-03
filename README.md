@@ -173,3 +173,4 @@ Este proyecto se puede dividir en las siguientes fases:
 - **/integration-hub:** Código fuente del Hub de Integración (Spring Boot).
 - **/mainframe-assets:** Ejemplos de código COBOL y JCL para ilustrar los componentes legacy.
 - **/api-gateway:** Ficheros de configuración del API Gateway (Spring Cloud Gateway).
+
